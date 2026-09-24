@@ -14,7 +14,7 @@ Antes de escrever código, leia este arquivo **e** `docs/status.md`.
 ## 2. Fonte da verdade da API
 
 - Contrato: `docs/api/openapi.json` — **gerado** do backend, não escrito à mão.
-- **Proveniência: `devpexpense@a79a5dd`** (branch `dev`, já deployado no ambiente de dev).
+- **Proveniência: `devpexpense@043ca2a`** (branch `dev`, já deployado no ambiente de dev).
 - O backend também serve o mesmo spec em `GET /api/v1/openapi.json`
   (dev: `http://devpexpense.local/api/v1/openapi.json`).
 - **Nunca** escreva `Codable` à mão espelhando um modelo do servidor: os tipos vêm do spec
@@ -62,6 +62,8 @@ Nenhuma tarefa está concluída sem build verde colado na resposta:
 
 - Valores chegam da API como **inteiro em centavos**. Trafegue e calcule como `Int`.
   Nunca `Double`/`Float` em dinheiro.
+- O `openapi.json` declara, por campo, que valores de resposta estão em centavos — e que
+  `amount` nas requisições vai em unidades. A referência é o spec, não este documento.
 - Formate apenas na borda de apresentação, com `NumberFormatter`, locale `de-CH` e
   separador de milhar fixado em `U+0027` (`'`) — ver `docs/architecture/adr-0004`.
 - Exemplos canônicos: `CHF 1'890.00` e `€ 68.50`.

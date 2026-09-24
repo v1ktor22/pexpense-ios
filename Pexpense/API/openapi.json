@@ -26,16 +26,20 @@
         "type": "object",
         "properties": {
           "code": {
-            "type": "string"
+            "type": "string",
+            "description": "Codigo estavel e nunca localizado (ex.: UNAUTHENTICATED, NOT_FOUND_EXPENSE)."
           },
           "error": {
-            "type": "string"
+            "type": "string",
+            "description": "Texto humano, hoje em frances. Pode mudar sem aviso."
           },
           "field": {
-            "type": "string"
+            "type": "string",
+            "description": "Presente em VALIDATION_ERROR: campo que falhou."
           },
           "rule": {
-            "type": "string"
+            "type": "string",
+            "description": "Presente em VALIDATION_ERROR: regra violada."
           }
         },
         "required": [
@@ -101,7 +105,8 @@
             "type": "string"
           },
           "amount": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Valor em centavos (inteiro). Ex.: 341100 = CHF 3411.00. Nunca em unidades."
           },
           "currency": {
             "type": "string",
@@ -109,7 +114,8 @@
             "maxLength": 3
           },
           "expenseDate": {
-            "type": "string"
+            "type": "string",
+            "description": "Data no formato ISO (YYYY-MM-DD)."
           },
           "paymentMethod": {
             "type": "string",
@@ -172,7 +178,8 @@
                   "maxLength": 3
                 },
                 "total": {
-                  "type": "number"
+                  "type": "integer",
+                  "description": "Valor em centavos (inteiro). Ex.: 341100 = CHF 3411.00. Nunca em unidades."
                 }
               },
               "required": [
@@ -186,7 +193,8 @@
           },
           "fxRate": {
             "type": "number",
-            "nullable": true
+            "nullable": true,
+            "description": "Taxa EUR->CHF usada na consolidacao, quando houver."
           },
           "availableMonths": {
             "type": "array",
@@ -262,7 +270,8 @@
                   "maxLength": 3
                 },
                 "total": {
-                  "type": "number"
+                  "type": "integer",
+                  "description": "Valor em centavos (inteiro). Ex.: 341100 = CHF 3411.00. Nunca em unidades."
                 }
               },
               "required": [
@@ -288,7 +297,8 @@
                   "maxLength": 3
                 },
                 "total": {
-                  "type": "number"
+                  "type": "integer",
+                  "description": "Valor em centavos (inteiro). Ex.: 341100 = CHF 3411.00. Nunca em unidades."
                 }
               },
               "required": [
@@ -312,7 +322,8 @@
                   "maxLength": 3
                 },
                 "total": {
-                  "type": "number"
+                  "type": "integer",
+                  "description": "Valor em centavos (inteiro). Ex.: 341100 = CHF 3411.00. Nunca em unidades."
                 }
               },
               "required": [
@@ -336,7 +347,8 @@
                   "maxLength": 3
                 },
                 "total": {
-                  "type": "number"
+                  "type": "integer",
+                  "description": "Valor em centavos (inteiro). Ex.: 341100 = CHF 3411.00. Nunca em unidades."
                 }
               },
               "required": [
@@ -358,7 +370,8 @@
                   "type": "string"
                 },
                 "amount": {
-                  "type": "integer"
+                  "type": "integer",
+                  "description": "Valor em centavos (inteiro). Ex.: 341100 = CHF 3411.00. Nunca em unidades."
                 },
                 "currency": {
                   "type": "string",
@@ -412,7 +425,8 @@
                   "type": "string"
                 },
                 "amount": {
-                  "type": "integer"
+                  "type": "integer",
+                  "description": "Valor em centavos (inteiro). Ex.: 341100 = CHF 3411.00. Nunca em unidades."
                 },
                 "currency": {
                   "type": "string",
@@ -420,7 +434,8 @@
                   "maxLength": 3
                 },
                 "expenseDate": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Data no formato ISO (YYYY-MM-DD)."
                 },
                 "paymentMethod": {
                   "type": "string",
@@ -484,7 +499,8 @@
                       "maxLength": 3
                     },
                     "total": {
-                      "type": "number"
+                      "type": "integer",
+                      "description": "Valor em centavos (inteiro). Ex.: 341100 = CHF 3411.00. Nunca em unidades."
                     }
                   },
                   "required": [
@@ -498,7 +514,8 @@
               },
               "fxRate": {
                 "type": "number",
-                "nullable": true
+                "nullable": true,
+                "description": "Taxa EUR->CHF usada na consolidacao, quando houver."
               },
               "availableMonths": {
                 "type": "array",
@@ -574,7 +591,8 @@
                       "maxLength": 3
                     },
                     "total": {
-                      "type": "number"
+                      "type": "integer",
+                      "description": "Valor em centavos (inteiro). Ex.: 341100 = CHF 3411.00. Nunca em unidades."
                     }
                   },
                   "required": [
@@ -600,7 +618,8 @@
                       "maxLength": 3
                     },
                     "total": {
-                      "type": "number"
+                      "type": "integer",
+                      "description": "Valor em centavos (inteiro). Ex.: 341100 = CHF 3411.00. Nunca em unidades."
                     }
                   },
                   "required": [
@@ -624,7 +643,8 @@
                       "maxLength": 3
                     },
                     "total": {
-                      "type": "number"
+                      "type": "integer",
+                      "description": "Valor em centavos (inteiro). Ex.: 341100 = CHF 3411.00. Nunca em unidades."
                     }
                   },
                   "required": [
@@ -648,7 +668,8 @@
                       "maxLength": 3
                     },
                     "total": {
-                      "type": "number"
+                      "type": "integer",
+                      "description": "Valor em centavos (inteiro). Ex.: 341100 = CHF 3411.00. Nunca em unidades."
                     }
                   },
                   "required": [
@@ -670,7 +691,8 @@
                       "type": "string"
                     },
                     "amount": {
-                      "type": "integer"
+                      "type": "integer",
+                      "description": "Valor em centavos (inteiro). Ex.: 341100 = CHF 3411.00. Nunca em unidades."
                     },
                     "currency": {
                       "type": "string",
@@ -800,7 +822,8 @@
             "type": "string"
           },
           "amount": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Valor em centavos (inteiro). Ex.: 341100 = CHF 3411.00. Nunca em unidades."
           },
           "currency": {
             "type": "string",
@@ -877,7 +900,8 @@
             "type": "string"
           },
           "expiresIn": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Validade do access, em segundos."
           },
           "tokenType": {
             "type": "string",
@@ -1271,6 +1295,7 @@
           }
         ],
         "requestBody": {
+          "description": "O campo `amount` vai em UNIDADES (ex.: 12.5 = CHF 12.50); o backend converte para centavos. As RESPOSTAS devolvem centavos, como inteiro.",
           "content": {
             "application/json": {
               "schema": {
@@ -1523,6 +1548,7 @@
           }
         ],
         "requestBody": {
+          "description": "O campo `amount` vai em UNIDADES (ex.: 12.5 = CHF 12.50); o backend converte para centavos. As RESPOSTAS devolvem centavos, como inteiro.",
           "content": {
             "application/json": {
               "schema": {

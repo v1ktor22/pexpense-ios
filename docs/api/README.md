@@ -5,7 +5,7 @@
 
 ## Estado
 
-**Spec integrado.** Proveniente do backend `devpexpense@a79a5dd` e servido ao vivo em
+**Spec integrado.** Proveniente do backend `devpexpense@043ca2a` e servido ao vivo em
 `GET /api/v1/openapi.json`. Cópias em `docs/api/openapi.json` e `Pexpense/API/openapi.json`.
 
 ## Por que está aqui
@@ -23,8 +23,8 @@ iOS deixa o diff de contrato visível: se o backend muda, aparece aqui antes de 
 
 ## Proveniência
 
-- Backend: `devpexpense@a79a5dd`
-- Gerado em: `2026-09-23`
+- Backend: `devpexpense@043ca2a`
+- Gerado em: `2026-09-24`
 
 ## Testes com backend vivo
 

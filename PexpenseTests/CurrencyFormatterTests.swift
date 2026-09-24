@@ -28,6 +28,18 @@ struct CurrencyFormatterTests {
         )
     }
 
+    @Test("Formats summary total amounts from minor units")
+    func summaryTotalMinorUnits() {
+        #expect(
+            CurrencyFormatter.string(fromMinorUnits: 341_100, currency: .chf)
+                == "CHF 3'411.00"
+        )
+        #expect(
+            CurrencyFormatter.string(fromMinorUnits: 2_500, currency: .eur)
+                == "€ 25.00"
+        )
+    }
+
     // MARK: - Grouping separator code point
 
     /// The separator must be `U+0027` (APOSTROPHE), never `U+2019`

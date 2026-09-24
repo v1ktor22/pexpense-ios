@@ -33,9 +33,8 @@ struct ExpenseListView: View {
                                         .font(.subheadline)
                                         .foregroundStyle(.secondary)
                                     Spacer()
-                                    // Total in summary is provided in minor units (or unit converted)
                                     let currencyEnum = CurrencyFormatter.Currency(rawValue: totalItem.currency) ?? .chf
-                                    Text(formatAmount(totalItem.total, currency: currencyEnum))
+                                    Text(CurrencyFormatter.string(fromMinorUnits: totalItem.total, currency: currencyEnum))
                                         .font(.title3.weight(.semibold).monospacedDigit())
                                 }
                             }
@@ -106,11 +105,5 @@ struct ExpenseListView: View {
                 await viewModel.loadExpenses()
             }
         }
-    }
-
-    /// Helper to format decimal or cent amount safely.
-    private func formatAmount(_ amount: Double, currency: CurrencyFormatter.Currency) -> String {
-        let minorUnits = Int(round(amount * 100))
-        return CurrencyFormatter.string(fromMinorUnits: minorUnits, currency: currency)
     }
 }

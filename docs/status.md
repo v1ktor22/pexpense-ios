@@ -1,8 +1,8 @@
 # Estado do projeto
 
-- **Atualizado em:** 2026-09-23
+- **Atualizado em:** 2026-09-24
 - **Fase:** 1 (Primeira fatia vertical concluída: Login OTP → Lista de Despesas)
-- **Contrato OpenAPI:** `docs/api/openapi.json` e `Pexpense/API/openapi.json` (sha `a79a5dd`)
+- **Contrato OpenAPI:** `docs/api/openapi.json` e `Pexpense/API/openapi.json` (sha `043ca2a`)
 - **Repositório do backend:** `/Users/silva/Documents/repositories-dev/devpexpense` (fora deste workspace).
 
 ## O que existe e está pronto nesta fatia
