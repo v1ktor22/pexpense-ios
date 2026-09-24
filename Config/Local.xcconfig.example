@@ -1,0 +1,2 @@
+// Copie para Local.xcconfig e ajuste por ambiente. Este arquivo e versionado.
+API_BASE_URL = https:/$()/devpexpense.local

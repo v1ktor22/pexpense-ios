@@ -6,8 +6,24 @@
 	objectVersion = 110;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		B510839F306454A000AD7491 /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = B510839E306454A000AD7491 /* OpenAPIRuntime */; };
+		B51083A1306454A700AD7491 /* OpenAPIURLSession in Frameworks */ = {isa = PBXBuildFile; productRef = B51083A0306454A700AD7491 /* OpenAPIURLSession */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B578E707306302B3008578D2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B578E6C53062E849008578D2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B578E6CC3062E849008578D2;
+			remoteInfo = Pexpense;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		B578E6CD3062E849008578D2 /* Pexpense.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pexpense.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B578E703306302B3008578D2 /* PexpenseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PexpenseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +32,22 @@
 			path = Pexpense;
 			sourceTree = "<group>";
 		};
+		B578E704306302B3008578D2 /* PexpenseTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = PexpenseTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		B578E6CA3062E849008578D2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				B51083A1306454A700AD7491 /* OpenAPIURLSession in Frameworks */,
+				B510839F306454A000AD7491 /* OpenAPIRuntime in Frameworks */,
+			);
+		};
+		B578E700306302B3008578D2 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
 			);
@@ -27,10 +55,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B510839D306454A000AD7491 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		B578E6C43062E849008578D2 = {
 			isa = PBXGroup;
 			children = (
 				B578E6CF3062E849008578D2 /* Pexpense */,
+				B578E704306302B3008578D2 /* PexpenseTests */,
+				B510839D306454A000AD7491 /* Frameworks */,
 				B578E6CE3062E849008578D2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -39,6 +76,7 @@
 			isa = PBXGroup;
 			children = (
 				B578E6CD3062E849008578D2 /* Pexpense.app */,
+				B578E703306302B3008578D2 /* PexpenseTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -56,13 +94,41 @@
 			);
 			buildRules = (
 			);
+			dependencies = (
+				B51083A3306454C200AD7491 /* PBXTargetDependency */,
+			);
 			fileSystemSynchronizedGroups = (
 				B578E6CF3062E849008578D2 /* Pexpense */,
 			);
 			name = Pexpense;
+			packageProductDependencies = (
+				B510839E306454A000AD7491 /* OpenAPIRuntime */,
+				B51083A0306454A700AD7491 /* OpenAPIURLSession */,
+			);
 			productName = Pexpense;
 			productReference = B578E6CD3062E849008578D2 /* Pexpense.app */;
 			productType = "com.apple.product-type.application";
+		};
+		B578E702306302B3008578D2 /* PexpenseTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B578E709306302B3008578D2 /* Build configuration list for PBXNativeTarget "PexpenseTests" */;
+			buildPhases = (
+				B578E6FF306302B3008578D2 /* Sources */,
+				B578E700306302B3008578D2 /* Frameworks */,
+				B578E701306302B3008578D2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B578E708306302B3008578D2 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B578E704306302B3008578D2 /* PexpenseTests */,
+			);
+			name = PexpenseTests;
+			productName = PexpenseTests;
+			productReference = B578E703306302B3008578D2 /* PexpenseTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -77,6 +143,10 @@
 					B578E6CC3062E849008578D2 = {
 						CreatedOnToolsVersion = 27.0;
 					};
+					B578E702306302B3008578D2 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = B578E6CC3062E849008578D2;
+					};
 				};
 			};
 			buildConfigurationList = B578E6C83062E849008578D2 /* Build configuration list for PBXProject "Pexpense" */;
@@ -88,18 +158,29 @@
 			);
 			mainGroup = B578E6C43062E849008578D2;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B510839A30644C6600AD7491 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */,
+				B510839B30644C8600AD7491 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */,
+				B510839C30644C9C00AD7491 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B578E6CE3062E849008578D2 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				B578E6CC3062E849008578D2 /* Pexpense */,
+				B578E702306302B3008578D2 /* PexpenseTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		B578E6CB3062E849008578D2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		B578E701306302B3008578D2 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -112,7 +193,24 @@
 			files = (
 			);
 		};
+		B578E6FF306302B3008578D2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B51083A3306454C200AD7491 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = B51083A2306454C200AD7491 /* OpenAPIGenerator */;
+		};
+		B578E708306302B3008578D2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B578E6CC3062E849008578D2 /* Pexpense */;
+			targetProxy = B578E707306302B3008578D2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		B578E6D63062E84A008578D2 /* Debug configuration for PBXProject "Pexpense" */ = {
@@ -168,7 +266,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -176,6 +274,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
@@ -226,12 +325,13 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 6.0;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -259,11 +359,11 @@
 				PRODUCT_BUNDLE_IDENTIFIER = swift.Pexpense;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_APPROACHABLE_CONCURRENCY = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -291,12 +391,54 @@
 				PRODUCT_BUNDLE_IDENTIFIER = swift.Pexpense;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_APPROACHABLE_CONCURRENCY = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B578E70A306302B3008578D2 /* Debug configuration for PBXNativeTarget "PexpenseTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZN96LVRC2K;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = swift.PexpenseTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pexpense.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pexpense";
+			};
+			name = Debug;
+		};
+		B578E70B306302B3008578D2 /* Release configuration for PBXNativeTarget "PexpenseTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZN96LVRC2K;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = swift.PexpenseTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pexpense.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pexpense";
 			};
 			name = Release;
 		};
@@ -319,7 +461,60 @@
 			);
 			defaultConfigurationName = Release;
 		};
+		B578E709306302B3008578D2 /* Build configuration list for PBXNativeTarget "PexpenseTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B578E70A306302B3008578D2 /* Debug configuration for PBXNativeTarget "PexpenseTests" */,
+				B578E70B306302B3008578D2 /* Release configuration for PBXNativeTarget "PexpenseTests" */,
+			);
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B510839A30644C6600AD7491 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-generator";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.13.1;
+			};
+		};
+		B510839B30644C8600AD7491 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-runtime";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.12.1;
+			};
+		};
+		B510839C30644C9C00AD7491 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-urlsession";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B510839E306454A000AD7491 /* OpenAPIRuntime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B510839B30644C8600AD7491 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
+			productName = OpenAPIRuntime;
+		};
+		B51083A0306454A700AD7491 /* OpenAPIURLSession */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B510839C30644C9C00AD7491 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
+			productName = OpenAPIURLSession;
+		};
+		B51083A2306454C200AD7491 /* OpenAPIGenerator */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B510839A30644C6600AD7491 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */;
+			productName = "plugin:OpenAPIGenerator";
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B578E6C53062E849008578D2 /* Project object */;
 	validationLevel = 1;

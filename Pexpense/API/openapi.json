@@ -1,0 +1,1616 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Pexpense API",
+    "version": "1.0.0",
+    "description": "API do Pexpense para clientes nativos. Erros seguem { code, error }: `code` e estavel e nunca localizado; `error` e texto humano."
+  },
+  "servers": [
+    {
+      "url": "https://app.pexpense.ch"
+    },
+    {
+      "url": "http://devpexpense.local"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Token de dispositivo (access). Obtido em POST /api/v1/auth/token e renovado em POST /api/v1/auth/token/refresh."
+      }
+    },
+    "schemas": {
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "rule": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "error"
+        ]
+      },
+      "Health": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "timestamp"
+        ]
+      },
+      "Period": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string"
+          },
+          "anchor": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string",
+            "nullable": true
+          },
+          "to": {
+            "type": "string",
+            "nullable": true
+          },
+          "kind": {
+            "type": "string"
+          },
+          "trendCapped": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "scope",
+          "anchor",
+          "from",
+          "to",
+          "kind",
+          "trendCapped"
+        ]
+      },
+      "Expense": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          },
+          "currency": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3
+          },
+          "expenseDate": {
+            "type": "string"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "nullable": true
+          },
+          "categoryId": {
+            "type": "string",
+            "nullable": true
+          },
+          "categoryName": {
+            "type": "string",
+            "nullable": true
+          },
+          "categoryColor": {
+            "type": "string"
+          },
+          "categoryIcon": {
+            "type": "string",
+            "nullable": true
+          },
+          "receiptId": {
+            "type": "string",
+            "nullable": true
+          },
+          "recurringRuleId": {
+            "type": "string",
+            "nullable": true
+          },
+          "recurringGenerated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "amount",
+          "currency",
+          "expenseDate",
+          "paymentMethod",
+          "categoryId",
+          "categoryName",
+          "categoryColor",
+          "categoryIcon",
+          "receiptId",
+          "recurringRuleId",
+          "recurringGenerated"
+        ]
+      },
+      "ExpenseSummary": {
+        "type": "object",
+        "properties": {
+          "totalsByCurrency": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "currency": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 3
+                },
+                "total": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "currency",
+                "total"
+              ]
+            }
+          },
+          "monthlyCount": {
+            "type": "number"
+          },
+          "fxRate": {
+            "type": "number",
+            "nullable": true
+          },
+          "availableMonths": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "period": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "scope": {
+                "type": "string"
+              },
+              "anchor": {
+                "type": "string"
+              },
+              "from": {
+                "type": "string",
+                "nullable": true
+              },
+              "to": {
+                "type": "string",
+                "nullable": true
+              },
+              "kind": {
+                "type": "string"
+              },
+              "trendCapped": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "scope",
+              "anchor",
+              "from",
+              "to",
+              "kind",
+              "trendCapped"
+            ]
+          }
+        },
+        "required": [
+          "totalsByCurrency",
+          "monthlyCount",
+          "fxRate",
+          "availableMonths",
+          "period"
+        ]
+      },
+      "ExpenseCharts": {
+        "type": "object",
+        "properties": {
+          "byCategory": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "categoryId": {
+                  "type": "string"
+                },
+                "categoryName": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "categoryColor": {
+                  "type": "string"
+                },
+                "currency": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 3
+                },
+                "total": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "categoryId",
+                "categoryName",
+                "categoryColor",
+                "currency",
+                "total"
+              ]
+            }
+          },
+          "dailyTotals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string"
+                },
+                "currency": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 3
+                },
+                "total": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "date",
+                "currency",
+                "total"
+              ]
+            }
+          },
+          "monthlyTrend": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "month": {
+                  "type": "string"
+                },
+                "currency": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 3
+                },
+                "total": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "month",
+                "currency",
+                "total"
+              ]
+            }
+          },
+          "paymentMethods": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "method": {
+                  "type": "string"
+                },
+                "currency": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 3
+                },
+                "total": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "method",
+                "currency",
+                "total"
+              ]
+            }
+          },
+          "topExpenses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "integer"
+                },
+                "currency": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 3
+                },
+                "categoryName": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "categoryColor": {
+                  "type": "string"
+                },
+                "categoryIcon": {
+                  "type": "string",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "id",
+                "description",
+                "amount",
+                "currency",
+                "categoryName",
+                "categoryColor",
+                "categoryIcon"
+              ]
+            }
+          }
+        },
+        "required": [
+          "byCategory",
+          "dailyTotals",
+          "monthlyTrend",
+          "paymentMethods",
+          "topExpenses"
+        ]
+      },
+      "ExpenseList": {
+        "type": "object",
+        "properties": {
+          "expenses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "integer"
+                },
+                "currency": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 3
+                },
+                "expenseDate": {
+                  "type": "string"
+                },
+                "paymentMethod": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "categoryId": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "categoryName": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "categoryColor": {
+                  "type": "string"
+                },
+                "categoryIcon": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "receiptId": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "recurringRuleId": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "recurringGenerated": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "description",
+                "amount",
+                "currency",
+                "expenseDate",
+                "paymentMethod",
+                "categoryId",
+                "categoryName",
+                "categoryColor",
+                "categoryIcon",
+                "receiptId",
+                "recurringRuleId",
+                "recurringGenerated"
+              ]
+            }
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "totalsByCurrency": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "currency": {
+                      "type": "string",
+                      "minLength": 3,
+                      "maxLength": 3
+                    },
+                    "total": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "currency",
+                    "total"
+                  ]
+                }
+              },
+              "monthlyCount": {
+                "type": "number"
+              },
+              "fxRate": {
+                "type": "number",
+                "nullable": true
+              },
+              "availableMonths": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "period": {
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "scope": {
+                    "type": "string"
+                  },
+                  "anchor": {
+                    "type": "string"
+                  },
+                  "from": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "to": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "kind": {
+                    "type": "string"
+                  },
+                  "trendCapped": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "scope",
+                  "anchor",
+                  "from",
+                  "to",
+                  "kind",
+                  "trendCapped"
+                ]
+              }
+            },
+            "required": [
+              "totalsByCurrency",
+              "monthlyCount",
+              "fxRate",
+              "availableMonths",
+              "period"
+            ]
+          },
+          "charts": {
+            "type": "object",
+            "properties": {
+              "byCategory": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "categoryId": {
+                      "type": "string"
+                    },
+                    "categoryName": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "categoryColor": {
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "minLength": 3,
+                      "maxLength": 3
+                    },
+                    "total": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "categoryId",
+                    "categoryName",
+                    "categoryColor",
+                    "currency",
+                    "total"
+                  ]
+                }
+              },
+              "dailyTotals": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "minLength": 3,
+                      "maxLength": 3
+                    },
+                    "total": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "date",
+                    "currency",
+                    "total"
+                  ]
+                }
+              },
+              "monthlyTrend": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "month": {
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "minLength": 3,
+                      "maxLength": 3
+                    },
+                    "total": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "month",
+                    "currency",
+                    "total"
+                  ]
+                }
+              },
+              "paymentMethods": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "method": {
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "minLength": 3,
+                      "maxLength": 3
+                    },
+                    "total": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "method",
+                    "currency",
+                    "total"
+                  ]
+                }
+              },
+              "topExpenses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "integer"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "minLength": 3,
+                      "maxLength": 3
+                    },
+                    "categoryName": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "categoryColor": {
+                      "type": "string"
+                    },
+                    "categoryIcon": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "description",
+                    "amount",
+                    "currency",
+                    "categoryName",
+                    "categoryColor",
+                    "categoryIcon"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "byCategory",
+              "dailyTotals",
+              "monthlyTrend",
+              "paymentMethods",
+              "topExpenses"
+            ]
+          }
+        },
+        "required": [
+          "expenses",
+          "summary",
+          "charts"
+        ]
+      },
+      "CreateExpenseResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "recurringRuleId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "recurringRuleId"
+        ]
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "name",
+          "icon",
+          "color",
+          "createdAt"
+        ]
+      },
+      "CreateCategoryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "icon",
+          "color"
+        ]
+      },
+      "RecurringRule": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          },
+          "currency": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3
+          },
+          "categoryId": {
+            "type": "string",
+            "nullable": true
+          },
+          "categoryName": {
+            "type": "string",
+            "nullable": true
+          },
+          "categoryColor": {
+            "type": "string",
+            "nullable": true
+          },
+          "categoryIcon": {
+            "type": "string",
+            "nullable": true
+          },
+          "paymentMethod": {
+            "type": "string",
+            "nullable": true
+          },
+          "dayOfMonth": {
+            "type": "integer"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "amount",
+          "currency",
+          "categoryId",
+          "categoryName",
+          "categoryColor",
+          "categoryIcon",
+          "paymentMethod",
+          "dayOfMonth",
+          "active",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateRecurringResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "TokenPair": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "expiresIn": {
+            "type": "integer"
+          },
+          "tokenType": {
+            "type": "string",
+            "enum": [
+              "Bearer"
+            ]
+          }
+        },
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "expiresIn",
+          "tokenType"
+        ]
+      },
+      "Ok": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Estado do servico",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/otp": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Pede o codigo OTP de login",
+        "description": "Ao contrario do `/api/v1/auth/token`, responde `ok` sem revelar se a conta existe. Se o cooldown de 60s por e-mail estiver ativo, devolve `429` com `code=RESEND_COOLDOWN` — o app deve mostrar contagem regressiva (o envio nao aconteceu).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "maxLength": 320,
+                    "format": "email"
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Codigo solicitado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Corpo invalido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Cooldown de reenvio (RESEND_COOLDOWN) ou tentativas em excesso (RATE_LIMITED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/token": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Troca o codigo OTP por um par de tokens do dispositivo",
+        "description": "Reusa o mesmo OTP do web (mesmo rate limit e mesmo contador de tentativas). O access vai no header Authorization das demais chamadas.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "maxLength": 320,
+                    "format": "email"
+                  },
+                  "otp": {
+                    "type": "string",
+                    "minLength": 4,
+                    "maxLength": 10
+                  },
+                  "deviceName": {
+                    "type": "string",
+                    "maxLength": 80
+                  },
+                  "platform": {
+                    "type": "string",
+                    "maxLength": 40
+                  }
+                },
+                "required": [
+                  "email",
+                  "otp"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Par de tokens emitido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPair"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Codigo invalido (code=INVALID_CODE) ou corpo invalido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Tentativas em excesso (code=RATE_LIMITED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/token/refresh": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Renova o par de tokens",
+        "description": "O refresh e single-use (rotacao). Reapresentar um refresh consumido dentro da janela de graca e tratado como retry e devolve par novo; fora da janela e reuso, e a familia inteira e revogada.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "refreshToken"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Par novo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPair"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refresh invalido, expirado ou reutilizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/token/revoke": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Revoga o token apresentado (logout do dispositivo)",
+        "description": "Aceita o access no header Authorization ou o refresh no corpo — assim o app consegue sair mesmo com o access expirado.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "refreshToken"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token revogado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nenhum token apresentado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/expenses": {
+      "get": {
+        "tags": [
+          "expenses"
+        ],
+        "summary": "Lista despesas com resumo e graficos do periodo",
+        "description": "Sem parametro de periodo devolve lista + totais (sem graficos). Com escopo (scope/anchor, month, ou from/to) devolve tambem os graficos.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "month | year | all"
+            },
+            "required": false,
+            "name": "scope",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "YYYY-MM ou YYYY"
+            },
+            "required": false,
+            "name": "anchor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "YYYY-MM (forma antiga)"
+            },
+            "required": false,
+            "name": "month",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "YYYY-MM-DD"
+            },
+            "required": false,
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "YYYY-MM-DD"
+            },
+            "required": false,
+            "name": "to",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "category_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Default 50, maximo 1000"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista, resumo e graficos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado (code=UNAUTHENTICATED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "expenses"
+        ],
+        "summary": "Cria uma despesa",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "exclusiveMinimum": true
+                  },
+                  "currency": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3,
+                    "default": "CHF"
+                  },
+                  "expenseDate": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "paymentMethod": {
+                    "type": "string",
+                    "nullable": true,
+                    "enum": [
+                      "card",
+                      "cash",
+                      "invoice",
+                      "twint",
+                      "transfer",
+                      "other",
+                      "pix",
+                      "boleto"
+                    ]
+                  },
+                  "categoryId": {
+                    "type": "string",
+                    "nullable": true,
+                    "minLength": 1
+                  },
+                  "isRecurring": {
+                    "type": "boolean"
+                  },
+                  "recurringDayOfMonth": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 31
+                  }
+                },
+                "required": [
+                  "description",
+                  "amount",
+                  "expenseDate"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Despesa criada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateExpenseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Corpo invalido (code=VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/categories": {
+      "get": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "Lista as categorias do usuario",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Categorias",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Category"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "Cria uma categoria",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "icon": {
+                    "type": "string",
+                    "maxLength": 40
+                  },
+                  "color": {
+                    "type": "string",
+                    "maxLength": 20
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Categoria criada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateCategoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Corpo invalido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/recurring": {
+      "get": {
+        "tags": [
+          "recurring"
+        ],
+        "summary": "Lista as regras recorrentes",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Regras",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecurringRule"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "recurring"
+        ],
+        "summary": "Cria uma regra recorrente",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "exclusiveMinimum": true
+                  },
+                  "currency": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3,
+                    "default": "CHF"
+                  },
+                  "categoryId": {
+                    "type": "string",
+                    "nullable": true,
+                    "minLength": 1
+                  },
+                  "paymentMethod": {
+                    "type": "string",
+                    "nullable": true,
+                    "enum": [
+                      "card",
+                      "cash",
+                      "invoice",
+                      "twint",
+                      "transfer",
+                      "other",
+                      "pix",
+                      "boleto"
+                    ]
+                  },
+                  "dayOfMonth": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 31
+                  }
+                },
+                "required": [
+                  "description",
+                  "amount",
+                  "dayOfMonth"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Regra criada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateRecurringResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Corpo invalido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
