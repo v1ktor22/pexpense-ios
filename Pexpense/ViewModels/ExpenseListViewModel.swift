@@ -10,7 +10,7 @@ import Observation
 @Observable
 @MainActor
 final class ExpenseListViewModel {
-    private let expenseService: any ExpenseServiceProtocol
+    let expenseService: any ExpenseServiceProtocol
 
     var expenses: [Components.Schemas.ExpenseList.expensesPayloadPayload] = []
     var summary: Components.Schemas.ExpenseList.summaryPayload? = nil

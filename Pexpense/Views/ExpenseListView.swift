@@ -14,6 +14,7 @@ import SwiftUI
 struct ExpenseListView: View {
     var viewModel: ExpenseListViewModel
     let onLogout: () -> Void
+    @State private var isShowingCreateExpense = false
 
     var body: some View {
         NavigationStack {
@@ -85,6 +86,13 @@ struct ExpenseListView: View {
             .listStyle(.insetGrouped)
             .navigationTitle("Expenses")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        isShowingCreateExpense = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Log out") {
                         onLogout()
@@ -92,6 +100,17 @@ struct ExpenseListView: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                 }
+            }
+            .sheet(isPresented: $isShowingCreateExpense) {
+                CreateExpenseView(
+                    viewModel: CreateExpenseViewModel(
+                        expenseService: viewModel.expenseService,
+                        onSuccess: {
+                            isShowingCreateExpense = false
+                            Task { await viewModel.loadExpenses() }
+                        }
+                    )
+                )
             }
             .refreshable {
                 await viewModel.loadExpenses()

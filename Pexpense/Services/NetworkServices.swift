@@ -105,4 +105,67 @@ final class RemoteExpenseService: ExpenseServiceProtocol, Sendable {
             throw AppApiError(code: "HTTP_\(statusCode)", message: "Failed to load expenses (\(statusCode)).")
         }
     }
+
+    func fetchCategories() async throws -> [Components.Schemas.Category] {
+        let input = Operations.get_sol_api_sol_v1_sol_categories.Input()
+        let response = try await client.get_sol_api_sol_v1_sol_categories(input)
+
+        switch response {
+        case .ok(let ok):
+            return try ok.body.json
+        case .unauthorized(let unauthorized):
+            let errorBody = try unauthorized.body.json
+            throw AppApiError(code: errorBody.code, message: errorBody.error, field: errorBody.field, rule: errorBody.rule)
+        case .undocumented(let statusCode, _):
+            throw AppApiError(code: "HTTP_\(statusCode)", message: "Failed to load categories (\(statusCode)).")
+        }
+    }
+
+    func createExpense(
+        params: CreateExpenseParams,
+        idempotencyKey: String
+    ) async throws -> Components.Schemas.CreateExpenseResponse {
+        var paymentMethodPayload: Operations.post_sol_api_sol_v1_sol_expenses.Input.Body.jsonPayload.paymentMethodPayload? = nil
+        if let pm = params.paymentMethod {
+            paymentMethodPayload = .init(rawValue: pm)
+        }
+
+        let bodyPayload = Operations.post_sol_api_sol_v1_sol_expenses.Input.Body.jsonPayload(
+            description: params.description,
+            amount: params.amountInUnits,
+            currency: params.currency,
+            expenseDate: params.expenseDate,
+            paymentMethod: paymentMethodPayload,
+            categoryId: params.categoryId,
+            isRecurring: params.isRecurring,
+            recurringDayOfMonth: params.recurringDayOfMonth
+        )
+
+        let headers = Operations.post_sol_api_sol_v1_sol_expenses.Input.Headers(
+            Idempotency_hyphen_Key: idempotencyKey
+        )
+
+        let input = Operations.post_sol_api_sol_v1_sol_expenses.Input(
+            headers: headers,
+            body: .json(bodyPayload)
+        )
+
+        let response = try await client.post_sol_api_sol_v1_sol_expenses(input)
+
+        switch response {
+        case .created(let created):
+            return try created.body.json
+        case .badRequest(let badRequest):
+            let errorBody = try badRequest.body.json
+            throw AppApiError(code: errorBody.code, message: errorBody.error, field: errorBody.field, rule: errorBody.rule)
+        case .unauthorized(let unauthorized):
+            let errorBody = try unauthorized.body.json
+            throw AppApiError(code: errorBody.code, message: errorBody.error, field: errorBody.field, rule: errorBody.rule)
+        case .conflict(let conflict):
+            let errorBody = try conflict.body.json
+            throw AppApiError(code: errorBody.code, message: errorBody.error, field: errorBody.field, rule: errorBody.rule)
+        case .undocumented(let statusCode, _):
+            throw AppApiError(code: "HTTP_\(statusCode)", message: "Failed to create expense (\(statusCode)).")
+        }
+    }
 }

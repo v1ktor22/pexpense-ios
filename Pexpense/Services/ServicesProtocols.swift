@@ -27,6 +27,28 @@ enum RequestOTPResult: Sendable {
 protocol ExpenseServiceProtocol: Sendable {
     /// Fetches expenses with summary for a given period.
     func fetchExpenses(limit: Int?) async throws -> Components.Schemas.ExpenseList
+
+    /// Fetches available categories.
+    func fetchCategories() async throws -> [Components.Schemas.Category]
+
+    /// Creates an expense with idempotency key tracking.
+    func createExpense(
+        params: CreateExpenseParams,
+        idempotencyKey: String
+    ) async throws -> Components.Schemas.CreateExpenseResponse
+}
+
+/// Parameters for creating an expense.
+/// Note: `amountInUnits` is in UNIDADES (ex: 12.50 = CHF 12.50), not in centimes.
+struct CreateExpenseParams: Sendable, Equatable {
+    var description: String
+    var amountInUnits: Double
+    var currency: String
+    var expenseDate: String // YYYY-MM-DD
+    var paymentMethod: String?
+    var categoryId: String?
+    var isRecurring: Bool?
+    var recurringDayOfMonth: Int?
 }
 
 /// High-level API error parsed from server JSON `{ code, error, field?, rule? }`.

@@ -1294,6 +1294,18 @@
             "bearerAuth": []
           }
         ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Chave unica por operacao (um UUID serve). Repetir o POST com a MESMA chave e o MESMO corpo devolve a resposta ORIGINAL — mesmo `id`, sem criar de novo. Use em retry de rede movel. Mesma chave com corpo diferente devolve 409."
+            },
+            "required": false,
+            "description": "Chave unica por operacao (um UUID serve). Repetir o POST com a MESMA chave e o MESMO corpo devolve a resposta ORIGINAL — mesmo `id`, sem criar de novo. Use em retry de rede movel. Mesma chave com corpo diferente devolve 409.",
+            "name": "Idempotency-Key",
+            "in": "header"
+          }
+        ],
         "requestBody": {
           "description": "O campo `amount` vai em UNIDADES (ex.: 12.5 = CHF 12.50); o backend converte para centavos. As RESPOSTAS devolvem centavos, como inteiro.",
           "content": {
@@ -1370,7 +1382,7 @@
             }
           },
           "400": {
-            "description": "Corpo invalido (code=VALIDATION_ERROR)",
+            "description": "Corpo invalido (code=VALIDATION_ERROR) ou Idempotency-Key malformada",
             "content": {
               "application/json": {
                 "schema": {
@@ -1381,6 +1393,16 @@
           },
           "401": {
             "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Chave ja usada com corpo diferente (code=IDEMPOTENCY_KEY_REUSED) ou requisicao em andamento (code=IDEMPOTENCY_IN_PROGRESS)",
             "content": {
               "application/json": {
                 "schema": {

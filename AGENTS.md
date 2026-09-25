@@ -14,7 +14,7 @@ Antes de escrever código, leia este arquivo **e** `docs/status.md`.
 ## 2. Fonte da verdade da API
 
 - Contrato: `docs/api/openapi.json` — **gerado** do backend, não escrito à mão.
-- **Proveniência: `devpexpense@043ca2a`** (branch `dev`, já deployado no ambiente de dev).
+- **Proveniência: `devpexpense@8053581`** (branch `dev`, já deployado no ambiente de dev).
 - O backend também serve o mesmo spec em `GET /api/v1/openapi.json`
   (dev: `http://devpexpense.local/api/v1/openapi.json`).
 - **Nunca** escreva `Codable` à mão espelhando um modelo do servidor: os tipos vêm do spec
@@ -78,6 +78,10 @@ Nenhuma tarefa está concluída sem build verde colado na resposta:
   para a autenticação. Nunca loop de refresh.
 - Nenhum segredo no repositório. Base URL e configuração por ambiente via `.xcconfig`
   não versionado.
+- **Idempotência:** todo POST que cria recurso manda `Idempotency-Key`. A chave é gerada
+  **uma vez por operação** (quando o usuário confirma) e **reusada em todo retry** daquela
+  mesma operação. Chave nova por tentativa anula a proteção. Nunca reusar a chave de uma
+  operação diferente.
 
 ## 7. Arquitetura
 
