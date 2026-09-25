@@ -21,12 +21,14 @@ final class AppEnvironment {
     let tokenStore: any TokenStore
     let authService: any AuthenticationService
     let expenseService: any ExpenseServiceProtocol
+    let submissionCoordinator: ExpenseSubmissionCoordinator
 
     var isAuthenticated: Bool
 
     init(
         baseURL: URL = AppConfiguration.apiBaseURL,
-        tokenStore: any TokenStore = KeychainService.shared
+        tokenStore: any TokenStore = KeychainService.shared,
+        pendingStore: any PendingExpenseStore = UserDefaultsPendingExpenseStore()
     ) {
         self.baseURL = baseURL
         self.tokenStore = tokenStore
@@ -46,12 +48,23 @@ final class AppEnvironment {
             middlewares: [authMiddleware]
         )
 
+        let remoteExpense = RemoteExpenseService(client: client)
         self.authService = RemoteAuthService(client: client, tokenStore: tokenStore)
-        self.expenseService = RemoteExpenseService(client: client)
+        self.expenseService = remoteExpense
+        self.submissionCoordinator = ExpenseSubmissionCoordinator(
+            expenseService: remoteExpense,
+            pendingStore: pendingStore
+        )
 
         clientHolder.onSessionExpired = { [weak self] in
             self?.isAuthenticated = false
         }
+    }
+
+    /// Replays any pending expense operation saved on disk (e.g. if app crashed or was killed).
+    func replayPendingOperationsOnLaunch() async {
+        guard isAuthenticated else { return }
+        await submissionCoordinator.replayPendingOperationIfNeeded()
     }
 
     /// Sign out the current device and clear credentials.

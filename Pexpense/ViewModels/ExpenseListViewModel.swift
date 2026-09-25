@@ -12,7 +12,7 @@ import Observation
 final class ExpenseListViewModel {
     let expenseService: any ExpenseServiceProtocol
 
-    var expenses: [Components.Schemas.ExpenseList.expensesPayloadPayload] = []
+    var expenses: [ExpenseDisplay] = []
     var summary: Components.Schemas.ExpenseList.summaryPayload? = nil
     var isLoading: Bool = false
     var errorMessage: String? = nil
@@ -28,7 +28,7 @@ final class ExpenseListViewModel {
 
         do {
             let list = try await expenseService.fetchExpenses(limit: 100)
-            self.expenses = list.expenses
+            self.expenses = list.expenses.map(ExpenseDisplay.init)
             self.summary = list.summary
             self.isLoading = false
         } catch let apiError as AppApiError {

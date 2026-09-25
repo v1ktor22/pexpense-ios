@@ -1298,10 +1298,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "Chave unica por operacao (um UUID serve). Repetir o POST com a MESMA chave e o MESMO corpo devolve a resposta ORIGINAL — mesmo `id`, sem criar de novo. Use em retry de rede movel. Mesma chave com corpo diferente devolve 409."
+              "description": "Chave unica por operacao (um UUID serve). Repetir o POST com a MESMA chave e o MESMO corpo devolve a resposta ORIGINAL — mesmo `id`, sem criar de novo: e assim que o cliente sobrevive a retry de rede movel. Mesma chave com corpo diferente devolve 409. RETENCAO: a chave e guardada por 24h; DEPOIS DISSO ela volta a valer e a mesma chamada CRIA DE NOVO. O cliente nao deve replayar operacao mais antiga que isso."
             },
             "required": false,
-            "description": "Chave unica por operacao (um UUID serve). Repetir o POST com a MESMA chave e o MESMO corpo devolve a resposta ORIGINAL — mesmo `id`, sem criar de novo. Use em retry de rede movel. Mesma chave com corpo diferente devolve 409.",
+            "description": "Chave unica por operacao (um UUID serve). Repetir o POST com a MESMA chave e o MESMO corpo devolve a resposta ORIGINAL — mesmo `id`, sem criar de novo: e assim que o cliente sobrevive a retry de rede movel. Mesma chave com corpo diferente devolve 409. RETENCAO: a chave e guardada por 24h; DEPOIS DISSO ela volta a valer e a mesma chamada CRIA DE NOVO. O cliente nao deve replayar operacao mais antiga que isso.",
             "name": "Idempotency-Key",
             "in": "header"
           }

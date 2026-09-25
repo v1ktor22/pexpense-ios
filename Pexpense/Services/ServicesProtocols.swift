@@ -40,7 +40,7 @@ protocol ExpenseServiceProtocol: Sendable {
 
 /// Parameters for creating an expense.
 /// Note: `amountInUnits` is in UNIDADES (ex: 12.50 = CHF 12.50), not in centimes.
-struct CreateExpenseParams: Sendable, Equatable {
+struct CreateExpenseParams: Codable, Sendable, Equatable {
     var description: String
     var amountInUnits: Double
     var currency: String

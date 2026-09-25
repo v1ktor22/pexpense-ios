@@ -45,10 +45,11 @@ final class CreateExpenseViewModel {
 
     init(
         expenseService: any ExpenseServiceProtocol,
+        coordinator: ExpenseSubmissionCoordinator? = nil,
         onSuccess: @escaping () -> Void
     ) {
         self.expenseService = expenseService
-        self.coordinator = ExpenseSubmissionCoordinator(expenseService: expenseService)
+        self.coordinator = coordinator ?? ExpenseSubmissionCoordinator(expenseService: expenseService)
         self.onSuccess = onSuccess
     }
 

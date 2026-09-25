@@ -13,8 +13,10 @@ Antes de escrever código, leia este arquivo **e** `docs/status.md`.
 
 ## 2. Fonte da verdade da API
 
-- Contrato: `docs/api/openapi.json` — **gerado** do backend, não escrito à mão.
-- **Proveniência: `devpexpense@8053581`** (branch `dev`, já deployado no ambiente de dev).
+- **Contrato:** `docs/api/openapi.json`, obtido com `./scripts/sync-openapi.sh` (busca do
+  backend de dev). **Nunca** edite o spec à mão nem copie entre as duas cópias manualmente:
+  o script mantém `docs/api/openapi.json` e `Pexpense/API/openapi.json` idênticos.
+- Spec atual: sha256 `644eca723dfb0e9fbe3070434b9c45b8331ab15574aaa6bd35e74a44f76b6bc8`. Última proveniência registrada: `devpexpense@54c122d`.
 - O backend também serve o mesmo spec em `GET /api/v1/openapi.json`
   (dev: `http://devpexpense.local/api/v1/openapi.json`).
 - **Nunca** escreva `Codable` à mão espelhando um modelo do servidor: os tipos vêm do spec

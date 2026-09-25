@@ -53,7 +53,7 @@ struct ExpenseListView: View {
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding(.vertical, 20)
                     } else {
-                        ForEach(viewModel.expenses, id: \.id) { expense in
+                        ForEach(viewModel.expenses) { expense in
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(expense.description)
@@ -66,7 +66,7 @@ struct ExpenseListView: View {
                                                 .padding(.vertical, 2)
                                                 .background(Color.secondary.opacity(0.12), in: Capsule())
                                         }
-                                        Text(expense.expenseDate)
+                                        Text(expense.formattedDate)
                                             .font(.caption)
                                             .foregroundStyle(.secondary)
                                     }
@@ -74,8 +74,7 @@ struct ExpenseListView: View {
 
                                 Spacer()
 
-                                let currencyEnum = CurrencyFormatter.Currency(rawValue: expense.currency) ?? .chf
-                                Text(CurrencyFormatter.string(fromMinorUnits: expense.amount, currency: currencyEnum))
+                                Text(expense.formattedAmount)
                                     .font(.callout.weight(.medium).monospacedDigit())
                             }
                             .padding(.vertical, 2)

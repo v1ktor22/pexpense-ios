@@ -15,6 +15,8 @@ final class MockExpenseService: ExpenseServiceProtocol, @unchecked Sendable {
     )
     var categoriesToReturn: [Components.Schemas.Category] = []
 
+    var onCall: ((_ key: String) -> Void)?
+
     func fetchExpenses(limit: Int?) async throws -> Components.Schemas.ExpenseList {
         fatalError("Not needed for these tests")
     }
@@ -28,6 +30,7 @@ final class MockExpenseService: ExpenseServiceProtocol, @unchecked Sendable {
         idempotencyKey: String
     ) async throws -> Components.Schemas.CreateExpenseResponse {
         capturedCalls.append((params, idempotencyKey))
+        onCall?(idempotencyKey)
         switch resultToReturn {
         case .success(let response):
             return response
@@ -37,14 +40,152 @@ final class MockExpenseService: ExpenseServiceProtocol, @unchecked Sendable {
     }
 }
 
+/// In-memory implementation of PendingExpenseStore for testing persistence order and lifecycle.
+final class MockPendingExpenseStore: PendingExpenseStore, @unchecked Sendable {
+    var storedOperation: PendingExpenseOperation?
+    var events: [String] = []
+
+    func loadPendingOperation() -> PendingExpenseOperation? {
+        storedOperation
+    }
+
+    func savePendingOperation(_ operation: PendingExpenseOperation) {
+        events.append("savePendingOperation:\(operation.idempotencyKey)")
+        storedOperation = operation
+    }
+
+    func clearPendingOperation() {
+        events.append("clearPendingOperation")
+        storedOperation = nil
+    }
+}
+
 @Suite("ExpenseCreationTests")
 struct ExpenseCreationTests {
 
+    // MARK: - Test 1: Invariant 1 - Grava antes de enviar
+    @Test("Grava-antes-de-enviar: Pending operation is persisted BEFORE network POST is made")
+    @MainActor
+    func saveBeforeSendOrder() async throws {
+        let mockService = MockExpenseService()
+        let mockStore = MockPendingExpenseStore()
+        var eventLog: [String] = []
+
+        mockService.onCall = { key in
+            eventLog.append("networkPost:\(key)")
+        }
+
+        let coordinator = ExpenseSubmissionCoordinator(
+            expenseService: mockService,
+            pendingStore: mockStore
+        )
+
+        let params = CreateExpenseParams(
+            description: "Stationery",
+            amountInUnits: 12.50,
+            currency: "CHF",
+            expenseDate: "2026-09-25"
+        )
+
+        _ = try await coordinator.submit(params: params)
+
+        let saveIndex = mockStore.events.firstIndex(where: { $0.starts(with: "savePendingOperation") })
+        #expect(saveIndex != nil)
+
+        #expect(mockService.capturedCalls.count == 1)
+        let callKey = mockService.capturedCalls[0].key
+        #expect(mockStore.events[0] == "savePendingOperation:\(callKey)")
+        #expect(eventLog.first == "networkPost:\(callKey)")
+
+        #expect(mockStore.events.contains("clearPendingOperation"))
+        #expect(mockStore.loadPendingOperation() == nil)
+    }
+
+    // MARK: - Test 2: Invariant 5 - Expirado não replaya (12h TTL)
+    @Test("Expirado nao replaya: Pending operation older than 12h is discarded on launch and NOT sent")
+    @MainActor
+    func expiredOperationNotReplayed() async throws {
+        let mockService = MockExpenseService()
+        let mockStore = MockPendingExpenseStore()
+
+        let currentTime = Date()
+
+        let staleParams = CreateExpenseParams(
+            description: "Old Expense from yesterday",
+            amountInUnits: 45.00,
+            currency: "CHF",
+            expenseDate: "2026-09-24"
+        )
+
+        let thirteenHoursAgo = currentTime.addingTimeInterval(-13 * 3600)
+        let staleOperation = PendingExpenseOperation(
+            idempotencyKey: "stale-key-13h",
+            params: staleParams,
+            createdAt: thirteenHoursAgo
+        )
+        mockStore.savePendingOperation(staleOperation)
+        mockStore.events.removeAll()
+
+        let coordinator = ExpenseSubmissionCoordinator(
+            expenseService: mockService,
+            pendingStore: mockStore,
+            dateProvider: { currentTime }
+        )
+
+        let replayed = await coordinator.replayPendingOperationIfNeeded()
+
+        #expect(!replayed)
+        #expect(mockService.capturedCalls.isEmpty)
+        #expect(mockStore.loadPendingOperation() == nil)
+        #expect(coordinator.currentIdempotencyKey == nil)
+    }
+
+    @Test("Pending operation within 12h is replayed on launch with the same key")
+    @MainActor
+    func validPendingOperationIsReplayedOnLaunch() async throws {
+        let mockService = MockExpenseService()
+        let mockStore = MockPendingExpenseStore()
+
+        let now = Date()
+        let params = CreateExpenseParams(
+            description: "Lunch interrupted by crash",
+            amountInUnits: 20.00,
+            currency: "CHF",
+            expenseDate: "2026-09-25"
+        )
+
+        let twoHoursAgo = now.addingTimeInterval(-2 * 3600)
+        let savedOp = PendingExpenseOperation(
+            idempotencyKey: "crash-recovery-key-uuid",
+            params: params,
+            createdAt: twoHoursAgo
+        )
+        mockStore.savePendingOperation(savedOp)
+
+        let coordinator = ExpenseSubmissionCoordinator(
+            expenseService: mockService,
+            pendingStore: mockStore,
+            dateProvider: { now }
+        )
+
+        let replayed = await coordinator.replayPendingOperationIfNeeded()
+
+        #expect(replayed)
+        #expect(mockService.capturedCalls.count == 1)
+        #expect(mockService.capturedCalls[0].key == "crash-recovery-key-uuid")
+        #expect(mockStore.loadPendingOperation() == nil)
+    }
+
+    // MARK: - Test 3: Invariant 3 - Retry reusa a chave
     @Test("Retry of same operation reuses the EXACT same Idempotency-Key")
     @MainActor
     func retryReusesSameIdempotencyKey() async throws {
         let mockService = MockExpenseService()
-        let coordinator = ExpenseSubmissionCoordinator(expenseService: mockService)
+        let mockStore = MockPendingExpenseStore()
+        let coordinator = ExpenseSubmissionCoordinator(
+            expenseService: mockService,
+            pendingStore: mockStore
+        )
 
         let params = CreateExpenseParams(
             description: "Lunch at Swiss Chalet",
@@ -55,7 +196,6 @@ struct ExpenseCreationTests {
             categoryId: "cat_1"
         )
 
-        // Simulate network failure on attempt 1
         mockService.resultToReturn = .failure(URLError(.notConnectedToInternet))
 
         do {
@@ -69,7 +209,6 @@ struct ExpenseCreationTests {
         let firstKey = mockService.capturedCalls[0].key
         #expect(!firstKey.isEmpty)
 
-        // Attempt 2: retry after network recovery
         mockService.resultToReturn = .success(.init(id: "exp_created_123"))
         let successResponse = try await coordinator.submit(params: params)
 
@@ -77,15 +216,19 @@ struct ExpenseCreationTests {
         #expect(mockService.capturedCalls.count == 2)
         let retryKey = mockService.capturedCalls[1].key
 
-        // CRITICAL CHECK: The retry MUST have used the exact same key
         #expect(retryKey == firstKey)
+        #expect(mockStore.loadPendingOperation() == nil)
     }
 
     @Test("Two distinct operations receive DIFFERENT Idempotency-Keys")
     @MainActor
     func distinctOperationsReceiveDifferentKeys() async throws {
         let mockService = MockExpenseService()
-        let coordinator = ExpenseSubmissionCoordinator(expenseService: mockService)
+        let mockStore = MockPendingExpenseStore()
+        let coordinator = ExpenseSubmissionCoordinator(
+            expenseService: mockService,
+            pendingStore: mockStore
+        )
 
         let params1 = CreateExpenseParams(
             description: "Train ticket",
@@ -115,7 +258,11 @@ struct ExpenseCreationTests {
     @MainActor
     func keyReusedGeneratesNewKeyOnNextAttempt() async throws {
         let mockService = MockExpenseService()
-        let coordinator = ExpenseSubmissionCoordinator(expenseService: mockService)
+        let mockStore = MockPendingExpenseStore()
+        let coordinator = ExpenseSubmissionCoordinator(
+            expenseService: mockService,
+            pendingStore: mockStore
+        )
 
         let params = CreateExpenseParams(
             description: "Groceries",
@@ -136,7 +283,6 @@ struct ExpenseCreationTests {
         #expect(mockService.capturedCalls.count == 1)
         let firstKey = mockService.capturedCalls[0].key
 
-        // Next attempt must generate a new key because the previous one was invalid/mismatched
         mockService.resultToReturn = .success(.init(id: "exp_groceries_ok"))
         _ = try await coordinator.submit(params: params)
 
@@ -145,6 +291,7 @@ struct ExpenseCreationTests {
         #expect(secondKey != firstKey)
     }
 
+    // MARK: - Costura de Mapeamento (ExpenseDisplay)
     @Test("ExpenseDisplay presentation model maps cents to Swiss Francs correctly")
     func expenseDisplayMapping() {
         let display = ExpenseDisplay(
