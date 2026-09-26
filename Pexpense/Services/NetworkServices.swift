@@ -168,4 +168,66 @@ final class RemoteExpenseService: ExpenseServiceProtocol, Sendable {
             throw AppApiError(code: "HTTP_\(statusCode)", message: "Failed to create expense (\(statusCode)).")
         }
     }
+
+    func updateExpense(
+        id: String,
+        params: UpdateExpenseParams
+    ) async throws {
+        var paymentMethodPayload: Operations.patch_sol_api_sol_v1_sol_expenses_sol__lcub_id_rcub_.Input.Body.jsonPayload.paymentMethodPayload? = nil
+        if let pm = params.paymentMethod {
+            paymentMethodPayload = .init(rawValue: pm)
+        }
+
+        let bodyPayload = Operations.patch_sol_api_sol_v1_sol_expenses_sol__lcub_id_rcub_.Input.Body.jsonPayload(
+            description: params.description,
+            expenseDate: params.expenseDate,
+            amount: params.amountInUnits,
+            currency: params.currency,
+            paymentMethod: paymentMethodPayload,
+            categoryId: params.categoryId
+        )
+
+        let input = Operations.patch_sol_api_sol_v1_sol_expenses_sol__lcub_id_rcub_.Input(
+            path: .init(id: id),
+            body: .json(bodyPayload)
+        )
+
+        let response = try await client.patch_sol_api_sol_v1_sol_expenses_sol__lcub_id_rcub_(input)
+
+        switch response {
+        case .ok:
+            return
+        case .badRequest(let badRequest):
+            let errorBody = try badRequest.body.json
+            throw AppApiError(code: errorBody.code, message: errorBody.error, field: errorBody.field, rule: errorBody.rule)
+        case .unauthorized(let unauthorized):
+            let errorBody = try unauthorized.body.json
+            throw AppApiError(code: errorBody.code, message: errorBody.error, field: errorBody.field, rule: errorBody.rule)
+        case .notFound(let notFound):
+            let errorBody = try notFound.body.json
+            throw AppApiError(code: errorBody.code, message: errorBody.error, field: errorBody.field, rule: errorBody.rule)
+        case .undocumented(let statusCode, _):
+            throw AppApiError(code: "HTTP_\(statusCode)", message: "Failed to update expense (\(statusCode)).")
+        }
+    }
+
+    func deleteExpense(id: String) async throws {
+        let input = Operations.delete_sol_api_sol_v1_sol_expenses_sol__lcub_id_rcub_.Input(
+            path: .init(id: id)
+        )
+        let response = try await client.delete_sol_api_sol_v1_sol_expenses_sol__lcub_id_rcub_(input)
+
+        switch response {
+        case .ok:
+            return
+        case .unauthorized(let unauthorized):
+            let errorBody = try unauthorized.body.json
+            throw AppApiError(code: errorBody.code, message: errorBody.error, field: errorBody.field, rule: errorBody.rule)
+        case .notFound(let notFound):
+            let errorBody = try notFound.body.json
+            throw AppApiError(code: errorBody.code, message: errorBody.error, field: errorBody.field, rule: errorBody.rule)
+        case .undocumented(let statusCode, _):
+            throw AppApiError(code: "HTTP_\(statusCode)", message: "Failed to delete expense (\(statusCode)).")
+        }
+    }
 }

@@ -39,4 +39,17 @@ final class ExpenseListViewModel {
             self.errorMessage = "Unable to load expenses. Please check your connection."
         }
     }
+
+    /// Deletes an expense by its ID and refreshes the list and summary.
+    func deleteExpense(id: String) async {
+        do {
+            try await expenseService.deleteExpense(id: id)
+            // Reload list and summary to reflect change
+            await loadExpenses()
+        } catch let apiError as AppApiError {
+            self.errorMessage = apiError.message
+        } catch {
+            self.errorMessage = "Failed to delete expense."
+        }
+    }
 }

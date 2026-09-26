@@ -1,54 +1,37 @@
 # Estado do projeto
 
 - **Atualizado em:** 2026-09-25
-- **Fase:** 2 (Fatia vertical de Criação de Despesas concluída com Idempotency-Key)
-- **Contrato OpenAPI:** `docs/api/openapi.json` e `Pexpense/API/openapi.json` (sha `8053581`)
+- **Fase:** 3 (Fatia vertical de Edição e Exclusão de Despesas concluída)
+- **Contrato OpenAPI:** `docs/api/openapi.json` e `Pexpense/API/openapi.json` (sha `a95d2842593666e09b3ad3aa829e656bb78ef64ad38230e0bea0ac50551abb20`, 16 caminhos)
 - **Repositório do backend:** `/Users/silva/Documents/repositories-dev/devpexpense` (fora deste workspace).
 
 ## O que existe e está pronto nesta fatia
 
 - **OpenAPI Integration:**
-  - `docs/api/openapi.json` e `Pexpense/API/openapi.json` atualizados para `devpexpense@8053581` (com suporte documentado a `Idempotency-Key` no header de `POST /api/v1/expenses`).
-  - Geração de código ativa via `swift-openapi-generator` plug-in com suporte a `POST /api/v1/expenses` e `GET /api/v1/categories`.
-- **Configuração e Ambiente:**
-  - `Config/Local.xcconfig` com `API_BASE_URL = https:/$()/devpexpense.local`.
-  - `Utilities/AppConfiguration.swift` fornecendo a base URL configurada.
-  - `App/AppEnvironment.swift` composition root injetando serviços e estado observável (`@Observable` + `@MainActor`).
-- **Segurança e Idempotência:**
-  - `Services/KeychainService.swift` implementando `TokenStore` com `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`.
-  - `Services/ExpenseSubmissionCoordinator.swift`:
-    - Gera UUID como `Idempotency-Key` por operação no momento da confirmação.
-    - Reusa a **mesma chave** em retries subsequentes daquela mesma operação.
-    - Trata `409 IDEMPOTENCY_KEY_REUSED` invalidando a chave para gerar nova na próxima tentativa.
-    - Trata `409 IDEMPOTENCY_IN_PROGRESS` mantendo a chave para retry.
-    - Limpa a chave em caso de sucesso.
-- **Camada de Rede e Autenticação:**
-  - `Services/AuthMiddleware.swift`: Bearer token + 1 refresh no 401 + 1 retry.
-  - `Services/NetworkServices.swift` (`RemoteExpenseService`):
-    - `createExpense`: envia `amountInUnits` em unidades (ex.: `12.50`), com `Idempotency-Key` no header.
-    - `fetchCategories`: busca categorias cadastradas via `GET /api/v1/categories`.
+  - `docs/api/openapi.json` e `Pexpense/API/openapi.json` sincronizados via `./scripts/sync-openapi.sh` (16 caminhos ativos, incluindo `PATCH /api/v1/expenses/{id}` e `DELETE /api/v1/expenses/{id}`).
+- **Camada de Rede:**
+  - `updateExpense`: envia requisição `PATCH /api/v1/expenses/{id}` parcial, enviando somente campos alterados e com `amountInUnits` em unidades. Trata `VALIDATION_ERROR` (com `field`) e `NOT_FOUND_EXPENSE`.
+  - `deleteExpense`: envia requisição `DELETE /api/v1/expenses/{id}` sem idempotency key (idempotência nativa de DELETE).
 - **Telas e Interface de Usuário:**
-  - `Views/CreateExpenseView.swift` e `ViewModels/CreateExpenseViewModel.swift`: formulário com descrição, valor (em unidades com separador local), moeda (CHF/EUR), data, seletor de categoria e recorrência. Destaque de erro por campo (`fieldErrors["description"]`, `fieldErrors["amount"]`).
-  - `Views/ExpenseListView.swift`: botão `+` abre a folha de criação; ao salvar, fecha e recarrega a lista.
-- **Modelos e Mapeamento:**
-  - `Models/ExpenseDisplay.swift`: costura de apresentação desacoplando o modelo de tela da OpenAPI e garantindo formatação correta de centavos em CHF e EUR.
-- **Testes:**
-  - `CurrencyFormatterTests`: 8 testes unitários de formatação de moeda, separador `U+0027` e totais de resumo.
-  - `ExpenseCreationTests`: 5 testes unitários validando:
-    1. Reuso da mesma chave de idempotência em retry após falha de rede.
-    2. Geração de chaves diferentes para operações distintas.
-    3. Geração de chave nova após `409 IDEMPOTENCY_KEY_REUSED`.
-    4. Mapeamento de centavos em CHF para `ExpenseDisplay`.
-    5. Mapeamento de centavos em EUR para `ExpenseDisplay`.
-  - `IntegrationTests`: 3 testes (Keychain + 2 testes de rede viva com gating).
+  - `Views/EditExpenseView.swift` e `ViewModels/EditExpenseViewModel.swift`: preenche os campos a partir dos centavos recebidos dividindo por 100 (`formatCentimesForFormInput`), calcula diff parcial e envia em unidades no salvamento. Destaque de erros por campo.
+  - `Views/ExpenseListView.swift`:
+    - Swipe lateral com ação de excluir neutra (rótulo vermelho/neutro conforme HIG e AGENTS.md §4, sem botão vermelho).
+    - Modal de confirmação descritivo antes da exclusão.
+    - Toque no item ou swipe de edição abre `EditExpenseView` em sheet.
+    - Recarrega a lista e o resumo após qualquer alteração.
+- **Testes Unitários:**
+  - `ExpenseCreationTests`:
+    - Testes de ida e volta do dinheiro: 341100 centavos preenche `3411.00` no formulário e gera PATCH com `3411` unidades. 2500 centavos EUR preenche `25.00`.
+    - Teste de chamada de exclusão no serviço.
+    - Testes de idempotência e persistência mantidos e verdes.
 
 ## O que NÃO foi feito (ficou para as próximas fatias)
 
-- **Comprovantes / Recibos:** upload de foto/câmera e OCR.
-- **Edição e exclusão:** rotas de update e delete de despesas.
+- **Comprovantes / Recibos:** upload de foto/câmera e OCR (`GET /api/v1/expenses/{id}/receipt`).
 - **Charts:** visualização gráfica de `ExpenseCharts`.
+- **Regras Recorrentes e Categorias:** gestão completa via tela dedicada.
 
 ## Próximos passos
 
-1. Upload de comprovantes de despesa via câmera/galeria.
-2. Filtros e gráficos do período.
+1. Upload e visualização de comprovantes de despesa.
+2. Filtros por período e gráficos de resumo.

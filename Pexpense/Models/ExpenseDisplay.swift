@@ -16,6 +16,9 @@ struct ExpenseDisplay: Identifiable, Equatable, Sendable {
     let categoryName: String?
     let categoryColor: String?
 
+    // Raw underlying values for editing
+    let rawItem: Components.Schemas.ExpenseList.expensesPayloadPayload?
+
     init(
         id: String,
         description: String,
@@ -23,7 +26,8 @@ struct ExpenseDisplay: Identifiable, Equatable, Sendable {
         currencyCode: String,
         expenseDate: String,
         categoryName: String? = nil,
-        categoryColor: String? = nil
+        categoryColor: String? = nil,
+        rawItem: Components.Schemas.ExpenseList.expensesPayloadPayload? = nil
     ) {
         self.id = id
         self.description = description
@@ -32,6 +36,7 @@ struct ExpenseDisplay: Identifiable, Equatable, Sendable {
         self.formattedDate = expenseDate
         self.categoryName = categoryName
         self.categoryColor = categoryColor
+        self.rawItem = rawItem
     }
 
     init(from schemaItem: Components.Schemas.ExpenseList.expensesPayloadPayload) {
@@ -42,7 +47,8 @@ struct ExpenseDisplay: Identifiable, Equatable, Sendable {
             currencyCode: schemaItem.currency,
             expenseDate: schemaItem.expenseDate,
             categoryName: schemaItem.categoryName,
-            categoryColor: schemaItem.categoryColor
+            categoryColor: schemaItem.categoryColor,
+            rawItem: schemaItem
         )
     }
 }

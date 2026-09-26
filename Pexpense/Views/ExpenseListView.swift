@@ -5,6 +5,11 @@
 
 import SwiftUI
 
+private struct IdentifiableWrapper<T>: Identifiable {
+    let id = UUID()
+    let value: T
+}
+
 /// Main expense list view for the first vertical slice.
 ///
 /// Complies with:
@@ -15,6 +20,9 @@ struct ExpenseListView: View {
     var viewModel: ExpenseListViewModel
     let onLogout: () -> Void
     @State private var isShowingCreateExpense = false
+    @State private var expenseToEdit: Components.Schemas.ExpenseList.expensesPayloadPayload? = nil
+    @State private var expenseToDelete: ExpenseDisplay? = nil
+    @State private var isShowingDeleteConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -77,6 +85,30 @@ struct ExpenseListView: View {
                                 Text(expense.formattedAmount)
                                     .font(.callout.weight(.medium).monospacedDigit())
                             }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                if let raw = expense.rawItem {
+                                    expenseToEdit = raw
+                                }
+                            }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                Button {
+                                    expenseToDelete = expense
+                                    isShowingDeleteConfirmation = true
+                                } label: {
+                                    Label("Supprimer", systemImage: "trash")
+                                }
+                                .tint(.gray) // Neutral button, danger is indicated by label only per AGENTS.md §4
+
+                                Button {
+                                    if let raw = expense.rawItem {
+                                        expenseToEdit = raw
+                                    }
+                                } label: {
+                                    Label("Modifier", systemImage: "pencil")
+                                }
+                                .tint(.secondary)
+                            }
                             .padding(.vertical, 2)
                         }
                     }
@@ -110,6 +142,40 @@ struct ExpenseListView: View {
                         }
                     )
                 )
+            }
+            .sheet(item: Binding(
+                get: { expenseToEdit.map { IdentifiableWrapper(value: $0) } },
+                set: { expenseToEdit = $0?.value }
+            )) { wrapper in
+                EditExpenseView(
+                    viewModel: EditExpenseViewModel(
+                        expense: wrapper.value,
+                        expenseService: viewModel.expenseService,
+                        onSuccess: {
+                            expenseToEdit = nil
+                            Task { await viewModel.loadExpenses() }
+                        }
+                    )
+                )
+            }
+            .confirmationDialog(
+                "Supprimer cette dépense ?",
+                isPresented: $isShowingDeleteConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Supprimer") {
+                    if let id = expenseToDelete?.id {
+                        Task { await viewModel.deleteExpense(id: id) }
+                    }
+                    expenseToDelete = nil
+                }
+                Button("Annuler", role: .cancel) {
+                    expenseToDelete = nil
+                }
+            } message: {
+                if let exp = expenseToDelete {
+                    Text("Voulez-vous vraiment supprimer « \(exp.description) » ? Cette action est irréversible.")
+                }
             }
             .refreshable {
                 await viewModel.loadExpenses()

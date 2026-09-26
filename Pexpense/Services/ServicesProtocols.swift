@@ -36,6 +36,27 @@ protocol ExpenseServiceProtocol: Sendable {
         params: CreateExpenseParams,
         idempotencyKey: String
     ) async throws -> Components.Schemas.CreateExpenseResponse
+
+    /// Partially updates an existing expense.
+    func updateExpense(
+        id: String,
+        params: UpdateExpenseParams
+    ) async throws
+
+    /// Deletes an expense by its ID.
+    func deleteExpense(id: String) async throws
+}
+
+/// Parameters for partially updating an expense.
+/// Note: Only provided fields will be sent in the PATCH request.
+/// `amountInUnits` is in UNIDADES (ex: 12.50 = CHF 12.50), not in centimes.
+struct UpdateExpenseParams: Sendable, Equatable {
+    var description: String?
+    var amountInUnits: Double?
+    var currency: String?
+    var expenseDate: String? // YYYY-MM-DD
+    var paymentMethod: String?
+    var categoryId: String?
 }
 
 /// Parameters for creating an expense.

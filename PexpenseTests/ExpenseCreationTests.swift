@@ -18,7 +18,23 @@ final class MockExpenseService: ExpenseServiceProtocol, @unchecked Sendable {
     var onCall: ((_ key: String) -> Void)?
 
     func fetchExpenses(limit: Int?) async throws -> Components.Schemas.ExpenseList {
-        fatalError("Not needed for these tests")
+        return .init(
+            expenses: [],
+            summary: .init(
+                totalsByCurrency: [],
+                monthlyCount: 0,
+                fxRate: nil,
+                availableMonths: nil,
+                period: nil
+            ),
+            charts: .init(
+                byCategory: [],
+                dailyTotals: [],
+                monthlyTrend: [],
+                paymentMethods: [],
+                topExpenses: []
+            )
+        )
     }
 
     func fetchCategories() async throws -> [Components.Schemas.Category] {
@@ -34,6 +50,32 @@ final class MockExpenseService: ExpenseServiceProtocol, @unchecked Sendable {
         switch resultToReturn {
         case .success(let response):
             return response
+        case .failure(let error):
+            throw error
+        }
+    }
+
+    var capturedUpdates: [(id: String, params: UpdateExpenseParams)] = []
+    var updateResultToReturn: Result<Void, Error> = .success(())
+
+    func updateExpense(id: String, params: UpdateExpenseParams) async throws {
+        capturedUpdates.append((id, params))
+        switch updateResultToReturn {
+        case .success:
+            return
+        case .failure(let error):
+            throw error
+        }
+    }
+
+    var capturedDeletions: [String] = []
+    var deleteResultToReturn: Result<Void, Error> = .success(())
+
+    func deleteExpense(id: String) async throws {
+        capturedDeletions.append(id)
+        switch deleteResultToReturn {
+        case .success:
+            return
         case .failure(let error):
             throw error
         }
@@ -321,5 +363,104 @@ struct ExpenseCreationTests {
         )
 
         #expect(display.formattedAmount == "€ 68.50")
+    }
+
+    // MARK: - Caminho de Ida e Volta do Dinheiro (Edição e Exclusão)
+    @Test("Ida e volta do dinheiro: 341100 centimes preenche 3411.00 e PATCH envia 3411 unidades")
+    @MainActor
+    func moneyRoundtripCHF() async throws {
+        let mockService = MockExpenseService()
+
+        // 1. Despesa vem da API com 341100 centimes
+        let schemaExpense = Components.Schemas.ExpenseList.expensesPayloadPayload(
+            id: "exp_1",
+            description: "Coop Supermarché",
+            amount: 341_100, // 341100 centavos
+            currency: "CHF",
+            expenseDate: "2026-09-25",
+            paymentMethod: "card",
+            categoryId: nil,
+            categoryName: nil,
+            categoryColor: "#000000",
+            categoryIcon: nil,
+            receiptId: nil,
+            recurringRuleId: nil,
+            recurringGenerated: false
+        )
+
+        var dismissed = false
+        let viewModel = EditExpenseViewModel(
+            expense: schemaExpense,
+            expenseService: mockService,
+            onSuccess: { dismissed = true }
+        )
+
+        // 2. Preenchimento do formulário: DEVE ser em UNIDADES (3411.00), NUNCA 341100
+        #expect(viewModel.amountString == "3411.00")
+        #expect(viewModel.amountString != "341100")
+
+        // 3. Se alterar a descrição e salvar, o PATCH deve carregar apenas o que mudou, e amount continua inalterado
+        viewModel.description = "Coop Supermarché Renens"
+        await viewModel.save()
+
+        #expect(dismissed)
+        #expect(mockService.capturedUpdates.count == 1)
+        let update = mockService.capturedUpdates[0]
+        #expect(update.id == "exp_1")
+        #expect(update.params.description == "Coop Supermarché Renens")
+        #expect(update.params.amountInUnits == nil) // sem alteração de valor
+
+        // 4. Se o usuário alterar o valor para 3500.50 unidades
+        viewModel.amountString = "3500.50"
+        await viewModel.save()
+
+        #expect(mockService.capturedUpdates.count == 2)
+        let secondUpdate = mockService.capturedUpdates[1]
+        // O valor enviado deve ser 3500.5 (unidades), JAMAIS 350050 centavos
+        #expect(secondUpdate.params.amountInUnits == 3500.50)
+    }
+
+    @Test("Ida e volta do dinheiro: 2500 centimes EUR preenche 25.00 unidades")
+    @MainActor
+    func moneyRoundtripEUR() async throws {
+        let mockService = MockExpenseService()
+
+        let schemaExpense = Components.Schemas.ExpenseList.expensesPayloadPayload(
+            id: "exp_2",
+            description: "Boulangerie",
+            amount: 2_500, // 2500 centavos
+            currency: "EUR",
+            expenseDate: "2026-09-25",
+            paymentMethod: "cash",
+            categoryId: nil,
+            categoryName: nil,
+            categoryColor: "#000000",
+            categoryIcon: nil,
+            receiptId: nil,
+            recurringRuleId: nil,
+            recurringGenerated: false
+        )
+
+        let viewModel = EditExpenseViewModel(
+            expense: schemaExpense,
+            expenseService: mockService,
+            onSuccess: {}
+        )
+
+        // 2500 centavos -> "25.00" unidades
+        #expect(viewModel.amountString == "25.00")
+        #expect(viewModel.amountString != "2500")
+    }
+
+    @Test("Excluir despesa chama DELETE /api/v1/expenses/{id}")
+    @MainActor
+    func deleteExpenseCallsService() async throws {
+        let mockService = MockExpenseService()
+        let listViewModel = ExpenseListViewModel(expenseService: mockService)
+
+        await listViewModel.deleteExpense(id: "exp_to_delete_999")
+
+        #expect(mockService.capturedDeletions.count == 1)
+        #expect(mockService.capturedDeletions[0] == "exp_to_delete_999")
     }
 }

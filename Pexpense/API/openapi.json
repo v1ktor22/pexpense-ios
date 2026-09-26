@@ -927,6 +927,41 @@
         "required": [
           "ok"
         ]
+      },
+      "LocaleResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "locale": {
+            "type": "string",
+            "description": "Locale aplicado: fr-CH (padrao) ou en."
+          }
+        },
+        "required": [
+          "success",
+          "locale"
+        ]
+      },
+      "RecurringFromExpenseResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Id da regra recorrente criada (ou da ja existente)."
+          },
+          "dayOfMonth": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 31,
+            "description": "Dia do mes usado pela regra."
+          }
+        },
+        "required": [
+          "id",
+          "dayOfMonth"
+        ]
       }
     },
     "parameters": {}
@@ -1649,6 +1684,854 @@
           },
           "401": {
             "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/{id}": {
+      "patch": {
+        "tags": [
+          "expenses"
+        ],
+        "summary": "Atualiza uma despesa (parcial)",
+        "description": "PATCH parcial: envie somente os campos que mudam. `amount` em UNIDADES (12.5 = CHF 12.50).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Id do recurso."
+            },
+            "required": true,
+            "description": "Id do recurso.",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "expenseDate": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "exclusiveMinimum": true
+                  },
+                  "currency": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3
+                  },
+                  "paymentMethod": {
+                    "type": "string",
+                    "nullable": true,
+                    "enum": [
+                      "card",
+                      "cash",
+                      "invoice",
+                      "twint",
+                      "transfer",
+                      "other",
+                      "pix",
+                      "boleto"
+                    ]
+                  },
+                  "categoryId": {
+                    "type": "string",
+                    "nullable": true,
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Despesa atualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Corpo invalido (code=VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Despesa nao encontrada (code=NOT_FOUND_EXPENSE)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "expenses"
+        ],
+        "summary": "Exclui uma despesa",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Id do recurso."
+            },
+            "required": true,
+            "description": "Id do recurso.",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Despesa excluida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Despesa nao encontrada (code=NOT_FOUND_EXPENSE)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/{id}/receipt": {
+      "get": {
+        "tags": [
+          "expenses"
+        ],
+        "summary": "Baixa o recibo de uma despesa",
+        "description": "Resposta BINARIA (imagem), nao JSON. Os erros continuam no contrato { code, error }.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Id do recurso."
+            },
+            "required": true,
+            "description": "Id do recurso.",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Arquivo do recibo (image/*)",
+            "content": {
+              "image/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recibo nao encontrado (code=NOT_FOUND_RECEIPT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/{id}/recurring": {
+      "post": {
+        "tags": [
+          "expenses"
+        ],
+        "summary": "Torna a despesa uma regra recorrente",
+        "description": "Sem corpo: os dados vem da propria despesa. Se ela ja tem regra, devolve a existente (nao duplica no duplo toque).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Id do recurso."
+            },
+            "required": true,
+            "description": "Id do recurso.",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Regra criada (ou ja existente)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringFromExpenseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados da despesa invalidos para virar regra",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Despesa nao encontrada (code=NOT_FOUND_EXPENSE)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/categories/{id}": {
+      "patch": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "Atualiza uma categoria (parcial)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Id do recurso."
+            },
+            "required": true,
+            "description": "Id do recurso.",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "icon": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 40
+                  },
+                  "color": {
+                    "type": "string",
+                    "nullable": true,
+                    "maxLength": 20
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Categoria atualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Corpo invalido (code=VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Categoria nao encontrada (code=NOT_FOUND_CATEGORY)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "Exclui uma categoria",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Id do recurso."
+            },
+            "required": true,
+            "description": "Id do recurso.",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Categoria excluida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Categoria nao encontrada (code=NOT_FOUND_CATEGORY)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/recurring/{id}": {
+      "patch": {
+        "tags": [
+          "recurring"
+        ],
+        "summary": "Atualiza uma regra recorrente (parcial)",
+        "description": "Somente os campos presentes no corpo sao alterados (permite alternar apenas `active`).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Id do recurso."
+            },
+            "required": true,
+            "description": "Id do recurso.",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "exclusiveMinimum": true
+                  },
+                  "currency": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3
+                  },
+                  "categoryId": {
+                    "type": "string",
+                    "nullable": true,
+                    "minLength": 1
+                  },
+                  "paymentMethod": {
+                    "type": "string",
+                    "nullable": true,
+                    "enum": [
+                      "card",
+                      "cash",
+                      "invoice",
+                      "twint",
+                      "transfer",
+                      "other",
+                      "pix",
+                      "boleto"
+                    ]
+                  },
+                  "dayOfMonth": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 31
+                  },
+                  "active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Regra atualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Corpo invalido (code=VALIDATION_ERROR)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Regra nao encontrada (code=NOT_FOUND_RECURRING_RULE)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "recurring"
+        ],
+        "summary": "Exclui uma regra recorrente",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Id do recurso."
+            },
+            "required": true,
+            "description": "Id do recurso.",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Regra excluida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Regra nao encontrada (code=NOT_FOUND_RECURRING_RULE)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "recurring"
+        ],
+        "summary": "Pula um mes de uma regra recorrente",
+        "description": "Um mes pulado nao gera despesa naquele mes.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Id do recurso."
+            },
+            "required": true,
+            "description": "Id do recurso.",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "month": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}$",
+                    "description": "Mes no formato YYYY-MM."
+                  }
+                },
+                "required": [
+                  "month"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Mes pulado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Mes invalido (code=INVALID_MONTH)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Regra nao encontrada (code=NOT_FOUND_RECURRING_RULE)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/account": {
+      "delete": {
+        "tags": [
+          "account"
+        ],
+        "summary": "Exclui a conta e os dados (GDPR/FADP)",
+        "description": "Irreversivel. Encerra a sessao no Better Auth e remove os cookies.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conta excluida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conta nao encontrada (code=NOT_FOUND_ACCOUNT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/account/export": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "summary": "Exporta todos os dados da conta (GDPR/FADP)",
+        "description": "Devolve as LINHAS CRUAS das tabelas: `exportedAt`, `account`, `categories`, `expenses`, `recurringRules`, `receipts`, `sessions`. A forma interna pode mudar com o schema; o app deve salvar/compartilhar o JSON, nao tipar campo a campo.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Todos os dados da conta em JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nao autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conta nao encontrada (code=NOT_FOUND_ACCOUNT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/locale": {
+      "post": {
+        "tags": [
+          "locale"
+        ],
+        "summary": "Define o idioma preferido",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "locale": {
+                    "type": "string",
+                    "description": "Locale desejado: fr-CH (padrao) ou en."
+                  }
+                },
+                "required": [
+                  "locale"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Locale aplicado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocaleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Locale nao suportado (code=VALIDATION_ERROR)",
             "content": {
               "application/json": {
                 "schema": {
