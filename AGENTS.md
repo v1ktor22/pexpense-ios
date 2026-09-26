@@ -16,7 +16,7 @@ Antes de escrever código, leia este arquivo **e** `docs/status.md`.
 - **Contrato:** `docs/api/openapi.json`, obtido com `./scripts/sync-openapi.sh` (busca do
   backend de dev). **Nunca** edite o spec à mão nem copie entre as duas cópias manualmente:
   o script mantém `docs/api/openapi.json` e `Pexpense/API/openapi.json` idênticos.
-- Spec atual: sha256 `a95d2842593666e09b3ad3aa829e656bb78ef64ad38230e0bea0ac50551abb20`. Última proveniência registrada: `devpexpense@54c122d`.
+- Spec atual: sha256 `183500db8f62be56e882bbdb4ab9d636436dbdb41464960297fd53be6309b859`. Última proveniência registrada: `devpexpense@54c122d`.
 - O backend também serve o mesmo spec em `GET /api/v1/openapi.json`
   (dev: `http://devpexpense.local/api/v1/openapi.json`).
 - **Nunca** escreva `Codable` à mão espelhando um modelo do servidor: os tipos vêm do spec
@@ -52,6 +52,14 @@ Nenhuma tarefa está concluída sem build verde colado na resposta:
 - Para build sem simulador específico: `-destination 'generic/platform=iOS Simulator'`.
 - Nunca escreva "pronto" nem "deve funcionar" sem a saída real do comando.
 - Se o build falhar e você não conseguir corrigir, relate o erro exato. Não mascare.
+- **CI:** o workflow tem dois jobs. `Build and test` roda build + testes no macOS, usando a
+  imagem `xcode-27` (preview) — as imagens `macos-*` param no Xcode 26.6 e o projeto usa
+  27.0. `Contract and hygiene` roda em `ubuntu-latest` e valida o contrato (cópias idênticas,
+  JSON válido, sha256 batendo com o §2) e a higiene do repositório (nenhum artefato ou
+  segredo versionado). Se o rótulo `xcode-27` for descontinuado, o job para de agendar: a
+  saída **não** é rebaixar o projeto para o Xcode 26, e sim reavaliar com runner
+  auto-hospedado neste Mac, **disparando só em `push`** (o repo é público; `pull_request` de
+  fork executaria código na máquina).
 
 ## 4. UI — regras duras
 

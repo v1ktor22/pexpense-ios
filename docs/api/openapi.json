@@ -3,14 +3,14 @@
   "info": {
     "title": "Pexpense API",
     "version": "1.0.0",
-    "description": "API do Pexpense para clientes nativos. Erros seguem { code, error }: `code` e estavel e nunca localizado; `error` e texto humano."
+    "description": "API do Pexpense para clientes nativos. Erros seguem { code, error }: `code` e estavel e nunca localizado; `error` e texto humano.\n\nToda resposta traz o header `X-Request-Id`. O cliente PODE mandar o proprio id (util para apontar um erro que ele registrou para a linha exata do log do servidor); id malformado e descartado e o servidor gera um UUID."
   },
   "servers": [
     {
       "url": "https://app.pexpense.ch"
     },
     {
-      "url": "http://devpexpense.local"
+      "url": "https://devpexpense.local"
     }
   ],
   "components": {

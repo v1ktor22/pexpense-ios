@@ -9,8 +9,12 @@ on:
 jobs:
   build-and-test:
     name: Build and test
-    # Xcode 27.0 (27A266a) is the version pinned below. The `xcode-27` image is a
-    # public preview and ships exactly that build, matching the local toolchain.
+    # `xcode-27` is a PREVIEW image (actions/runner-images, issue 14404) and today it is
+    # the only way to run this project's build+test on CI: the `macos-*` images stop at
+    # Xcode 26.6, and this project uses Xcode 27.0 (iOS 27 SDK + the concurrency settings
+    # in ADR-0007). If the label is ever retired the job stops being scheduled — the fix
+    # is NOT to downgrade the project to Xcode 26 (that breaks the iOS 27 SDK and the
+    # concurrency settings), but to re-evaluate with a self-hosted runner.
     runs-on: xcode-27
     timeout-minutes: 30
 
@@ -74,3 +78,76 @@ jobs:
             -project Pexpense.xcodeproj \
             -destination '${{ steps.destination.outputs.destination }}' \
             -skipPackagePluginValidation
+
+  contract-and-hygiene:
+    name: Contract and hygiene
+    # Cheap checks that need no Xcode. They catch a class of mistake the build cannot:
+    # a spec copy updated on one side only, a hand-edited spec, a stale sha record, or a
+    # build artifact / secret committed to a PUBLIC repository.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Both spec copies are identical
+        run: |
+          diff docs/api/openapi.json Pexpense/API/openapi.json
+          echo "spec copies are identical"
+
+      - name: Spec is valid JSON with the expected top-level keys
+        run: |
+          node -e '
+            const fs = require("fs");
+            const spec = JSON.parse(fs.readFileSync("docs/api/openapi.json", "utf8"));
+            for (const key of ["openapi", "paths", "components"]) {
+              if (!(key in spec)) {
+                console.error(`::error::openapi.json is missing the "${key}" key`);
+                process.exit(1);
+              }
+            }
+            console.log(`openapi=${spec.openapi} paths=${Object.keys(spec.paths).length} schemas=${Object.keys(spec.components.schemas ?? {}).length}`);
+          '
+
+      - name: Spec sha256 matches the one recorded in AGENTS.md
+        run: |
+          set -euo pipefail
+          REGISTERED=$(grep -oE 'Spec atual: sha256 `[0-9a-f]{64}`' AGENTS.md | grep -oE '[0-9a-f]{64}' || true)
+          if [ -z "${REGISTERED:-}" ]; then
+            echo "::error::Could not find the provenance line in AGENTS.md section 2."
+            echo "Expected a line like: - Spec atual: sha256 \`<64 hex chars>\`. ..."
+            exit 1
+          fi
+
+          ACTUAL=$(shasum -a 256 docs/api/openapi.json | cut -d' ' -f1)
+          echo "registered: $REGISTERED"
+          echo "actual:     $ACTUAL"
+
+          if [ "$REGISTERED" != "$ACTUAL" ]; then
+            echo "::error::openapi.json does not match the sha256 recorded in AGENTS.md."
+            echo "Either the spec was edited by hand, or it was synced without updating AGENTS.md."
+            echo "Run ./scripts/sync-openapi.sh and update the provenance line."
+            exit 1
+          fi
+          echo "spec sha256 matches AGENTS.md"
+
+      - name: No build artifacts or secrets are tracked
+        run: |
+          set -euo pipefail
+          PATTERN='(^|/)(DerivedData|\.build|xcuserdata)/|\.DS_Store$|\.p8$|\.p12$|\.mobileprovision$|^Config/Local\.xcconfig$'
+          OFFENDERS=$(git ls-files | grep -E "$PATTERN" || true)
+
+          if [ -n "$OFFENDERS" ]; then
+            echo "::error::Tracked files that must never be committed to this public repository:"
+            echo "$OFFENDERS"
+            echo
+            echo "Fix the .gitignore and untrack them (git rm --cached), do not weaken this gate."
+            exit 1
+          fi
+          echo "no build artifacts or secrets are tracked"
+
+      - name: Local config example exists
+        run: |
+          test -f Config/Local.xcconfig.example
+          echo "Config/Local.xcconfig.example is present"
