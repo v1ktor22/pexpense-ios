@@ -10,6 +10,9 @@ import Observation
 @Observable
 @MainActor
 final class AuthViewModel {
+    /// Server-side resend window, in seconds. Mirrors the backend cooldown and the web client.
+    static let resendCooldownSeconds = 60
+
     enum Step {
         case requestEmail
         case enterCode
@@ -47,8 +50,14 @@ final class AuthViewModel {
 
             switch result {
             case .sent:
+                // The send succeeded, so the server-side 60s window is now open.
+                // Start the countdown here, not on the 429: the user should see
+                // "resend in 60s" immediately instead of losing a tap to an error.
+                startCooldown(seconds: Self.resendCooldownSeconds)
                 currentStep = .enterCode
             case .cooldown(let seconds):
+                // Safety net: the client lost its state (app restarted, second device),
+                // so the 429 is the only source of truth for the remaining time.
                 startCooldown(seconds: seconds)
                 currentStep = .enterCode
             }

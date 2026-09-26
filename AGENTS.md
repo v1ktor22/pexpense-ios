@@ -30,9 +30,12 @@ Antes de escrever código, leia este arquivo **e** `docs/status.md`.
 
 1. `POST /api/v1/auth/otp` com `{ email }` → pede o código por e-mail. Responde
    `{ ok: true }` e **não** revela se a conta existe.
-   Se o reenvio estiver no cooldown de 60s, responde **429 com `code = RESEND_COOLDOWN`**:
-   o envio NÃO aconteceu — o app deve mostrar contagem regressiva e dizer que o código
-   anterior foi invalidado. Não trate 429 como falha de rede.
+   **O contador de reenvio começa no envio bem-sucedido (60s)**, não no 429: o botão de
+   reenviar fica desabilitado mostrando o tempo restante desde o primeiro envio, para o
+   usuário não gastar um toque descobrindo o cooldown. O **429 com `code = RESEND_COOLDOWN`
+   é rede de segurança**, não o gatilho — o estado do cliente se perde (app reiniciado, dois
+   aparelhos) e aí o servidor é a única fonte da verdade. O envio NÃO aconteceu nesse caso;
+   não trate 429 como falha de rede.
 2. `POST /api/v1/auth/token` com `{ email, otp, deviceName?, platform? }` → **201** com
    `{ accessToken, refreshToken, expiresIn, tokenType: "Bearer" }`. O access dura 20 min.
 3. `POST /api/v1/auth/token/refresh` com `{ refreshToken }` → par novo. O refresh é

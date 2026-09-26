@@ -98,20 +98,23 @@ struct OTPLoginView: View {
                         .controlSize(.large)
                         .disabled(viewModel.otpCode.isEmpty || viewModel.isLoading)
 
-                        // Cooldown / Resend Action
-                        if viewModel.cooldownRemaining > 0 {
-                            Text("Resend available in \(viewModel.cooldownRemaining)s")
-                                .font(.footnote.monospacedDigit())
-                                .foregroundStyle(.secondary)
-                        } else {
-                            Button("Resend Code") {
-                                Task { await viewModel.resendCode() }
+                        // Resend action. The countdown starts on a successful send, so the
+                        // button is disabled and shows the remaining time right away — the
+                        // user never spends a tap to discover the cooldown.
+                        Button {
+                            Task { await viewModel.resendCode() }
+                        } label: {
+                            if viewModel.cooldownRemaining > 0 {
+                                Text("Resend in \(viewModel.cooldownRemaining)s")
+                                    .monospacedDigit()
+                            } else {
+                                Text("Resend Code")
                             }
-                            .buttonStyle(.plain)
-                            .font(.footnote)
-                            .foregroundStyle(.tint)
-                            .disabled(viewModel.isLoading)
                         }
+                        .buttonStyle(.plain)
+                        .font(.footnote)
+                        .foregroundStyle(viewModel.cooldownRemaining > 0 ? Color.secondary : Color.accentColor)
+                        .disabled(viewModel.cooldownRemaining > 0 || viewModel.isLoading)
 
                         Button("Change Email") {
                             viewModel.currentStep = .requestEmail
