@@ -1,0 +1,76 @@
+name: iOS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build and test
+    # Xcode 27.0 (27A266a) is the version pinned below. The `xcode-27` image is a
+    # public preview and ships exactly that build, matching the local toolchain.
+    runs-on: xcode-27
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode_27.app
+          xcodebuild -version
+
+      - name: Verify both spec copies are identical
+        run: |
+          diff docs/api/openapi.json Pexpense/API/openapi.json
+          echo "spec copies are identical"
+
+      - name: Resolve package dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies -scheme Pexpense -project Pexpense.xcodeproj
+
+      - name: Pick an iOS Simulator destination
+        id: destination
+        run: |
+          set -euo pipefail
+          # Destinations are listed with the OLDEST runtime first. Xcode 27's Swift
+          # compiler emits symbols (e.g. _swift_initBorrow) that older runtimes'
+          # libswiftCore.dylib does not export, so the app aborts at launch with
+          # "Symbol not found". Pick the NEWEST available iOS runtime instead.
+          DEST_ID=$(xcodebuild -showdestinations -scheme Pexpense -project Pexpense.xcodeproj 2>/dev/null \
+            | grep 'platform:iOS Simulator' \
+            | grep -v 'placeholder' \
+            | grep -i 'name:iPhone' \
+            | sed -E 's/.*id:([^,]+), OS:([0-9.]+).*/\2 \1/' \
+            | sort -rV \
+            | head -1 \
+            | awk '{print $2}' || true)
+
+          if [ -z "${DEST_ID:-}" ]; then
+            echo "::error::Could not extract an iOS Simulator destination from xcodebuild -showdestinations."
+            echo "Raw output:"
+            xcodebuild -showdestinations -scheme Pexpense -project Pexpense.xcodeproj || true
+            exit 1
+          fi
+
+          echo "destination=platform=iOS Simulator,id=$DEST_ID" >> "$GITHUB_OUTPUT"
+          echo "Selected destination: platform=iOS Simulator,id=$DEST_ID"
+
+      - name: Build
+        run: |
+          xcodebuild build \
+            -scheme Pexpense \
+            -project Pexpense.xcodeproj \
+            -destination '${{ steps.destination.outputs.destination }}' \
+            -skipPackagePluginValidation
+
+      - name: Test
+        run: |
+          xcodebuild test \
+            -scheme Pexpense \
+            -project Pexpense.xcodeproj \
+            -destination '${{ steps.destination.outputs.destination }}' \
+            -skipPackagePluginValidation
